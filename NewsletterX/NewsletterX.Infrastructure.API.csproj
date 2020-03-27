@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NewsletterX.Core\NewsletterX.Core.csproj" />
+    <ProjectReference Include="..\NewsletterX.Infrastructure.DataAccess\NewsletterX.Infrastructure.DataAccess.csproj" />
+  </ItemGroup>
+
+
+</Project>
