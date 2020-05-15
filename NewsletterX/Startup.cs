@@ -10,6 +10,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NewsletterX.Core.Application.Service;
+using NewsletterX.Core.Domain.Service;
+using NewsletterX.Infrastructure.DataAccess;
 
 namespace NewsletterX
 {
@@ -25,6 +28,9 @@ namespace NewsletterX
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+            services.AddScoped<SubscriptionService>();
             services.AddControllers();
         }
 
@@ -37,10 +43,14 @@ namespace NewsletterX
             }
 
             app.UseHttpsRedirection();
-
+            DefaultFilesOptions options = new DefaultFilesOptions();
+            options.DefaultFileNames.Clear();
+            options.DefaultFileNames.Add("index.html");
+            app.UseDefaultFiles(options);
             app.UseRouting();
 
             app.UseAuthorization();
+            app.UseStaticFiles();
 
             app.UseEndpoints(endpoints =>
             {
