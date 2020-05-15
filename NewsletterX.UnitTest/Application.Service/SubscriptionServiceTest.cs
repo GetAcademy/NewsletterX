@@ -4,6 +4,7 @@ using Moq;
 using NewsletterX.Core.Application.Service;
 using NewsletterX.Core.Domain.Model;
 using NewsletterX.Core.Domain.Service;
+using NewsletterX.UnitTest.Application.Service;
 using NUnit.Framework;
 
 namespace NewsletterX.UnitTest
@@ -13,6 +14,7 @@ namespace NewsletterX.UnitTest
         [Test]
         public async Task TestSubscriptionOk()
         {
+            // arrange
             var emailServiceMock = new Mock<IEmailService>();
             var subscriptionRepoMock = new Mock<ISubscriptionRepository>();
             emailServiceMock.Setup(es => es.Send(It.IsAny<Email>()))
@@ -20,14 +22,42 @@ namespace NewsletterX.UnitTest
             subscriptionRepoMock.Setup(sr => sr.Create(It.IsAny<Subscription>()))
                             .ReturnsAsync(true);
             var service = new SubscriptionService(emailServiceMock.Object, subscriptionRepoMock.Object);
+
+            // act
             var subscription = new Subscription("Terje", "terje@kolderup.net");
-            await service.Subscribe(subscription);
-            emailServiceMock.Verify(es=>es.Send(
-                It.Is<Email>(e=>e.To=="terje@kolderup.net")));
-            subscriptionRepoMock.Verify(sr=>sr.Create(
-                It.Is<Subscription>(s=>s.Email=="terje@kolderup.net")));
+            var subscribeIsSuccess = await service.Subscribe(subscription);
+
+            // assert
+            Assert.IsTrue(subscribeIsSuccess);
+            emailServiceMock.Verify(
+                es=>es.Send(It.Is<Email>(e=>e.To=="terje@kolderup.net")));
+            subscriptionRepoMock.Verify(
+                sr=>sr.Create(It.Is<Subscription>(s=>s.Email=="terje@kolderup.net")));
             emailServiceMock.VerifyNoOtherCalls();
             subscriptionRepoMock.VerifyNoOtherCalls();
+        }
+
+
+        [Test]
+        public async Task TestSubscriptionOk2()
+        {
+            // Samme som over, men uten mock-rammverk
+
+            // arrange
+            var emailService = new EmailService();
+            var subscriptionRepo= new SubscriptionRepository();
+            var service = new SubscriptionService(emailService, subscriptionRepo);
+
+            // act
+            var subscription = new Subscription("Terje", "terje@kolderup.net");
+            var subscribeIsSuccess = await service.Subscribe(subscription);
+
+            // assert
+            Assert.IsTrue(subscribeIsSuccess);
+            Assert.AreEqual("terje@kolderup.net", emailService.SentEmailToAddress);
+            Assert.AreEqual("terje@kolderup.net", subscriptionRepo.CreatedEmailToAddress);
+            Assert.AreEqual(1, emailService.CallCount);
+            Assert.AreEqual(1, subscriptionRepo.CallCount);
         }
 
         [Test]
