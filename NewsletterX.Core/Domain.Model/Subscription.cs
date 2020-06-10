@@ -7,6 +7,7 @@ namespace NewsletterX.Core.Domain.Model
         public string Name { get; set; }
         public string Email { get; set; }
         public string VerificationCode { get; set; }
+        public bool IsVerified { get; set; }
 
         public Subscription()
         {

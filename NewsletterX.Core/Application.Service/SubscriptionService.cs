@@ -17,33 +17,28 @@ namespace NewsletterX.Core.Application.Service
             _subscriptionRepository = subscriptionRepository;
             _emailService = emailService;
         }
+
         public async Task<bool> Subscribe(Subscription request)
         {
             var subscription = new Subscription(request.Name, request.Email);
             var isCreated = await _subscriptionRepository.Create(subscription);
             if (!isCreated) return false;
-            var url = $"http://localhost:64451/subscription?email={request.Email}&code={subscription.VerificationCode}";
-            var text = $"<a href=\"{url}\">Klikk her for å bekrefte</a>";
-            var email = new Email(
-                request.Email,
-                "NewsletterX@mail.com",
-                "Bekreft abonnement på nyhetsbrev",
-                text);
+            var email = new ConfirmSubscriptionEmail(
+                request.Email, "NewsletterX@mail.com", subscription.VerificationCode);
             var isSent = await _emailService.Send(email);
-            if (!isSent) return false;
-            return true;
+            return isSent;
         }
 
         public async Task<bool> Verify(Subscription verificationRequest)
         {
             var subscription = await _subscriptionRepository.ReadByEmail(verificationRequest.Email);
-            if (verificationRequest.VerificationCode != subscription.VerificationCode)
+            if (subscription == null || verificationRequest.VerificationCode != subscription.VerificationCode)
             {
                 return false;
             }
+            subscription.IsVerified = true;
             var hasUpdated = await _subscriptionRepository.Update(subscription);
-            if (!hasUpdated) return false;
-            return true;
+            return hasUpdated;
         }
     }
 }
